@@ -13,6 +13,7 @@ COPY . .
 
 RUN composer install
 RUN composer dump-autoload
+RUN cp .env.example .env
 
 EXPOSE 8000
 
