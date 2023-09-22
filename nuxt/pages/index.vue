@@ -22,9 +22,7 @@
             <button v-if="updating" @click="update" class="btn btn-primary">Update Todo</button>
             <button v-else @click="store" class="btn btn-primary">Add Todo</button>
         </form>
-        <div v-if="successMessage" class="alert alert-success mt-3">
-          {{ successMessage }}
-        </div>
+        <b-alert v-model="successMessage" variant="success" class="mt-2" dismissible>Todo added successfully</b-alert>
       </div>
     </b-sidebar>
     
@@ -34,7 +32,10 @@
           <b-button variant="danger" class="mr-2" @click="remaining">{{ todos.length -  completed_count }} remaining</b-button>
           <b-button variant="success" @click="completed">{{ completed_count }} completed</b-button>
         </div>
-          <b-button variant="primary" v-b-toggle.sidebar>add task</b-button>
+        <b-alert v-model="showDismissibleAlert" variant="danger" dismissible>
+            Todo deleted successfully
+        </b-alert>
+        <b-button variant="primary" v-b-toggle.sidebar>add task</b-button>
       </div>
       <div v-for="todo in filteredTodos" :key="todo.id">
         <b-card class="mt-2" shadow>
@@ -49,6 +50,7 @@
             <div class="col-8">{{ todo.notes }}</div>
             <div class="col-4 justify-content-end d-flex">
                 <div>
+                  <b-button @click="remove(todo)" variant="dark">x</b-button>
                   <b-button @click="edit(todo)" variant="info" v-b-toggle.sidebar>edit</b-button>
                   <b-button @click="update(todo)" 
                     :class="[todo.is_completed ? 'btn-success' : 'btn-danger']" 
@@ -76,8 +78,9 @@ export default {
         notes: '',
         due_date: null,
       },
-      successMessage: '',
+      successMessage: false,
       updating: false,
+      showDismissibleAlert: false
     };
   },
   computed: {
@@ -143,7 +146,7 @@ export default {
           }
         );
 
-        this.successMessage = 'Todo added successfully';
+        this.successMessage = true;
         this.newTodo = {}
         this.fetchTodos();
       } catch (error) {
@@ -153,6 +156,23 @@ export default {
     edit(todo) {
       this.updating = true
       this.newTodo = todo
+    },
+    async remove(todo) {
+      try {
+        const accessToken = localStorage.getItem('access_token');
+        const response = await this.$axios.delete(`/todos/${todo.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        this.showDismissibleAlert = true;
+        this.fetchTodos();
+      } catch (error) {
+        console.error('Error adding todo:', error);
+      }
     },
     resetForm() {
       this.newTodo = {}
